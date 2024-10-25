@@ -22,4 +22,5 @@ public class MySQLConnection {
             System.out.println("Error connecting to the database: " + e.getMessage());
         }
     }
+
 }
