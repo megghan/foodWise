@@ -79,7 +79,10 @@ public class AppFoodWise{
                 System.out.println("Quais os ingredientes?");
                 String ingredientes= scan.nextLine();
 
-                db.createRecipe(nomeReceita, ingredientes);}
+                System.out.println("Insira as instruções:");
+                String instrucoes = scan.nextLine();
+
+                db.createRecipe(nomeReceita, ingredientes, instrucoes);}
             else{
                 db.listaReceitas();
             }

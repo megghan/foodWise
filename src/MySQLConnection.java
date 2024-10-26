@@ -151,11 +151,12 @@ public class MySQLConnection {
     }
 
     // CRUD Methods for 'recipe' Table
-    public void createRecipe(String name, String ingredients) throws SQLException {
-        String query = "INSERT INTO recipe (name, ingredients) VALUES (?, ?)";
+    public void createRecipe(String name, String ingredients, String instructions) throws SQLException {
+        String query = "INSERT INTO recipe (name, ingredients, instructions) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
             pstmt.setString(1, name);
             pstmt.setString(2, ingredients);
+            pstmt.setString(3, instructions);
             pstmt.executeUpdate();
             System.out.println("Receita Criada!");
         }
