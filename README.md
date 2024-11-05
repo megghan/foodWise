@@ -5,7 +5,7 @@ Projeto para a matéria de UPX. App voltado para gerenciamento de alimentos e ra
 ## DEVLOG
 ### Master Branch
 Criado o projeto Java usando a IDE IntelliJ. 
-Drivers adicionados: JavaFX e MySQL JDBC, para exibição de UI e conecção com MySQL.
+Drivers adicionados: JavaFX e MySQL JDBC, para exibição de UI e conexão com MySQL.
 
 ### Database branch: foodwise 0.1
 Criado o ramo "database" a partir de onde vamos realizar os trabalhos.
