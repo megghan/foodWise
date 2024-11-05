@@ -1,41 +1,32 @@
-/* Estilo para o layout principal */
-#mainLayout {
-    -fx-padding: 15px;
-    -fx-spacing: 20px;
-    -fx-alignment: center;
+@font-face {
+    font-family: 'Kavoon';
+    src: url('Kavoon-Regular.ttf') format('truetype');
+}
+.root {
     -fx-background-color: #A8D5BA;
-}
-
-/* Estilo para o label de expiração */
-#expiringItemsLabel {
+    -fx-font-family: 'Kavoon';
     -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #d9534f;
-    -fx-padding: 5px;
-}
 
-/* Estilos para os botões */
-.button-primary {
-    -fx-background-color: #5cb85c;
-    -fx-text-fill: white;
-    -fx-padding: 10px 20px;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
 }
-
-.button-primary:hover {
-    -fx-background-color: #4cae4c;
-}
-
-/* Para o layout de botões agrupados */
-.button-layout {
-    -fx-spacing: 10px;
-    -fx-alignment: center;
-}
-
-/* Ajuste para botões */
 .button {
-    -fx-padding: 8px;
-    -fx-min-width: 120px;
+    -fx-background-color: #4B8077;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-border-color: #5b8c6a;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
+    -fx-background-radius: 5px;
+}
+
+
+.label {
+    -fx-text-fill: #333333;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.title-label {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-alignment: center;
 }
