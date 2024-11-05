@@ -1,3 +1,5 @@
+package foodwise;
+
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -30,6 +32,36 @@ public class MySQLConnection {
         }
     }
     //--------- Métodos necessários ------------
+
+    public boolean authenticateUser(String username, String password) throws SQLException {
+        String query = "SELECT COUNT(*) FROM users WHERE username = ? AND password = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, username);
+            statement.setString(2, password);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt(1) > 0; // Retorna true se o usuário existir
+            }
+        }
+        return false; // Retorna false se o usuário não existir
+    }
+
+    public int getUserId(String username, String password) throws SQLException {
+        String query = "SELECT id FROM users WHERE username = ? AND password = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, username);
+            statement.setString(2, password);
+
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getInt("id"); // Retorna o user_id encontrado
+            } else {
+                System.out.println("Usuário não encontrado ou senha incorreta.");
+                return -1; // Retorna -1 se o usuário não foi encontrado
+            }
+        }
+    }
+
     public boolean userExists(String username) throws SQLException {
         String query = "SELECT COUNT(*) FROM users WHERE username = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -43,88 +75,94 @@ public class MySQLConnection {
         return false; // Retorna false se o usuário não existe
     }
 
-    public void checkExpiringItems() throws SQLException {
+    public int checkExpiringItems() throws SQLException {
         String query = "SELECT name, expiry_date FROM food";
         List<String> expiredItems = new ArrayList<>();
         List<String> aboutToExpireItems = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             ResultSet resultSet = statement.executeQuery();
-
-            // Data atual para comparação
             LocalDate today = LocalDate.now();
 
             while (resultSet.next()) {
                 String name = resultSet.getString("name");
                 LocalDate expiryDate = resultSet.getDate("expiry_date").toLocalDate();
 
-                // Checar se o item já venceu
                 if (expiryDate.isBefore(today)) {
                     expiredItems.add(name + " (vencido)");
-                }
-                // Checar se o item está prestes a vencer (até 5 dias para vencer)
-                else if (!expiryDate.isAfter(today.plusDays(5))) {
+                } else if (!expiryDate.isAfter(today.plusDays(5))) {
                     aboutToExpireItems.add(name + " (prestes a vencer)");
                 }
             }
         }
 
-        // Exibir resultados
-        int totalItems = expiredItems.size() + aboutToExpireItems.size();
-
-        if (totalItems > 0) {
-            System.out.println("Você tem " +totalItems +" itens vencidos ou prestes a vencer" );
-            System.out.println("Itens:");
-            expiredItems.forEach(System.out::println);
-            aboutToExpireItems.forEach(System.out::println);
-        } else {
-            System.out.println("Nenhum item vencido ou prestes a vencer.");
-        }
+        return expiredItems.size() + aboutToExpireItems.size();
     }
 
-    public void listaComidas() throws SQLException{
-        String query = "SELECT * FROM food";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            ResultSet resultSet = statement.executeQuery();
-            System.out.println("=== Lista de Alimentos ===");
-            while (resultSet.next()) {
-                System.out.println("Nome: " + resultSet.getString("name") +
-                        ", Quantidade: " + resultSet.getInt("quantity") +
-                        ", Data de Validade: " + resultSet.getDate("expiry_date"));
-            }}
-    }
+    public List<String> listaComidas(int userId) throws SQLException {
+        List<String> foodItems = new ArrayList<>();
+        String query = "SELECT * FROM food WHERE user_id = ?";
 
-    public void listaReceitas() throws SQLException {
-        String query = "SELECT * FROM recipe";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
             ResultSet resultSet = statement.executeQuery();
-            System.out.println("=== Lista de Receitas ===");
+
             while (resultSet.next()) {
-                System.out.println("Nome: " + resultSet.getString("name") +
-                        ", Ingredientes: " + resultSet.getString("ingredients"));
+                // Adiciona cada item à lista no formato desejado
+                foodItems.add(String.format("Nome: %s, Quantidade: %d, Data de Validade: %s",
+                        resultSet.getString("name"),
+                        resultSet.getInt("quantity"),
+                        resultSet.getDate("expiry_date")));
             }
-        }}
+        }
+
+        if (foodItems.isEmpty()) {
+            foodItems.add("Nenhum item encontrado.");
+        }
+
+        return foodItems;
+    }
+
+    public List<String> listaReceitas(int userId) throws SQLException {
+        List<String> receitas = new ArrayList<>();
+        String query = "SELECT name FROM recipe WHERE user_id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, userId);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                receitas.add(resultSet.getString("name"));
+            }
+        }
+        return receitas;
+    }
 
     //----------- Métodos CRUD --------------
 
     // para a tabela food
-    public void createFood(String name, int quantity, String expiryDate) throws SQLException {
-        String query = "INSERT INTO food (name, quantity, expiry_date) VALUES (?, ?, ?)";
+    public void createFood(String name, int quantity, String expiryDate, int userId) throws SQLException {
+        String query = "INSERT INTO food (name, quantity, expiry_date, user_id) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
             pstmt.setString(1, name);
             pstmt.setInt(2, quantity);
             pstmt.setDate(3, Date.valueOf(expiryDate));
+            pstmt.setInt(4, userId); // Associar o user_id
             pstmt.executeUpdate();
             System.out.println("Item criado com sucesso");
         }
     }
 
-    public void readFood() throws SQLException {
-        String query = "SELECT * FROM food";
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
+    public void readFoodById(int id) throws SQLException {
+        String query = "SELECT * FROM food WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
                 System.out.printf("ID: %d, Nome: %s, Quantidade: %d, Data de Validade: %s%n",
                         rs.getInt("id"), rs.getString("name"), rs.getInt("quantity"), rs.getDate("expiry_date"));
+            } else {
+                System.out.println("Item de comida não encontrado.");
             }
         }
     }
@@ -151,23 +189,28 @@ public class MySQLConnection {
     }
 
     // CRUD Methods for 'recipe' Table
-    public void createRecipe(String name, String ingredients, String instructions) throws SQLException {
-        String query = "INSERT INTO recipe (name, ingredients, instructions) VALUES (?, ?, ?)";
+    public void createRecipe(String name, String ingredients, String instructions, int userId) throws SQLException {
+        String query = "INSERT INTO recipe (name, ingredients, instructions, user_id) VALUES (?, ?, ?,?)";
         try (PreparedStatement pstmt = connection.prepareStatement(query)) {
             pstmt.setString(1, name);
             pstmt.setString(2, ingredients);
             pstmt.setString(3, instructions);
+            pstmt.setInt(4, userId); // Associar o user_id
             pstmt.executeUpdate();
             System.out.println("Receita Criada!");
         }
     }
 
-    public void readRecipes() throws SQLException {
-        String query = "SELECT * FROM recipe";
-        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-            while (rs.next()) {
-                System.out.printf("ID: %d, Name: %s, Ingredients: %s%n",
-                        rs.getInt("id"), rs.getString("name"), rs.getString("ingredients"));
+    public void readRecipeById(int id) throws SQLException {
+        String query = "SELECT * FROM recipe WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                System.out.printf("ID: %d, Nome: %s, Ingredientes: %s, Instruções: %s%n",
+                        rs.getInt("id"), rs.getString("name"), rs.getString("ingredients"), rs.getString("instructions"));
+            } else {
+                System.out.println("Receita não encontrada.");
             }
         }
     }

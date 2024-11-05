@@ -9,5 +9,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="openjfx.javafx.controls" level="project" />
     <orderEntry type="library" name="mysql.connector.java" level="project" />
+    <orderEntry type="library" name="javafx-swt" level="project" />
+    <orderEntry type="library" name="javafx-swt" level="application" />
   </component>
 </module>
